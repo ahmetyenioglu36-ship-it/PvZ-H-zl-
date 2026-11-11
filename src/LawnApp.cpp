@@ -1576,6 +1576,10 @@ void LawnApp::UpdateFrames()
 	{
 		aUpdateCount = 20;
 	}
+	else if (mGameSpeed > 1 && mBoard && mGameScene == GameScenes::SCENE_PLAYING)
+{
+    aUpdateCount = mGameSpeed;
+}
 
 	for (int i = 0; i < aUpdateCount; i++)
 	{
