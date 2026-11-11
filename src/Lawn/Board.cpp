@@ -21,7 +21,7 @@
 
 #include <time.h>
 #include <algorithm>
-#include <SDL3/SDL.h>
+#include <SDL.h>
 #include <format>
 #include "ZenGarden.h"
 #include "BoardInclude.h"
@@ -55,6 +55,8 @@
 //#define SEXY_PERF_ENABLED
 #include "misc/PerfTimer.h"
 #include "Widget/AchievementsScreen.h"
+// Touch speed-up button
+static const Sexy::Rect SPEED_BUTTON_RECT(600, 4, 64, 34);
 
 constexpr const int ZOMBIE_COUNTDOWN_FIRST_WAVE = 1800;
 constexpr const int ZOMBIE_COUNTDOWN = 2500;
@@ -244,6 +246,7 @@ void BoardInitForPlayer()
 
 void Board::DisposeBoard()
 {
+	mApp->mGameSpeed = 1;
 	if (mApp->mGameMode == GameMode::GAMEMODE_CHALLENGE_ZEN_GARDEN)
 		mApp->mZenGarden->LeaveGarden();
 	if (mApp->mGameMode == GameMode::GAMEMODE_TREE_OF_WISDOM)
@@ -4362,6 +4365,13 @@ void Board::PickUpTool(GameObjectType theObjectType)
 
 void Board::MouseDown(int x, int y, int theClickCount)
 {
+	if (theClickCount > 0 && mApp->mGameScene == GameScenes::SCENE_PLAYING && SPEED_BUTTON_RECT.Contains(x, y))
+{
+    mApp->mGameSpeed = mApp->mGameSpeed % 3 + 1;
+    mApp->PlaySample(Sexy::SOUND_TAP);
+    mIgnoreMouseUp = true;
+    return;
+}
 	UpdateMousePosition();
 	Widget::MouseDown(x, y, theClickCount);
 	mIgnoreMouseUp = !CanInteractWithBoardButtons();
@@ -7465,6 +7475,17 @@ void Board::Draw(Graphics* g)
 
 	mDrawCount++;
 	DrawGameObjects(g);
+	if (mApp->mGameScene == GameScenes::SCENE_PLAYING)
+{
+    g->SetColor(Color(0, 0, 0, 150));
+    g->FillRect(SPEED_BUTTON_RECT);
+    PvzpDrawString(g, std::to_string(mApp->mGameSpeed) + "x",
+        SPEED_BUTTON_RECT.mX + SPEED_BUTTON_RECT.mWidth / 2,
+        SPEED_BUTTON_RECT.mY + 24,
+        Sexy::FONT_DWARVENTODCRAFT18,
+        mApp->mGameSpeed > 1 ? Color(255, 220, 60) : Color(255, 255, 255),
+        DrawStringJustification::DS_ALIGN_CENTER);
+}
 }
 
 void Board::SetMustacheMode(bool theEnableMustache)
